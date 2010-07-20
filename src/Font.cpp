@@ -91,13 +91,8 @@ namespace ngl{
     int2 position=m_position;
     const char *str=msg.c_str();
     for(int i=0; i<msg.length(); ++i){
-      if( msg[i] == '\n' ){
-        position.x   =m_position.x;
-        position.y  -=m_face->maxSize().y;
-        continue;
-      }
 
-      const Glyph &glyph  =m_face->get_glyph(msg[i]);
+      const Glyph &glyph  =m_face->get_glyph( msg[i]=='\n' ? ' ' : msg[i] );
       if( glyph == Glyph::null ){
         fprintf(stderr, "Failed to load glyph '%c'.\n", msg[i]);
         continue;
@@ -107,28 +102,30 @@ namespace ngl{
       //generate(ce->verts+(i*4), i*4, glyph, position, color);
       ce->verts[i*4+0].position.set(glyph.off.x+position.x,
                                     glyph.off.y+position.y);
-      ce->verts[i*4+0].texCoord=glyph.botLeft;
-      ce->verts[i*4+0].color=color;
+      ce->verts[i*4+0].texCoord =glyph.botLeft;
+      ce->verts[i*4+0].color    =color;
 
       ce->verts[i*4+1].position.set(glyph.off.x+position.x+glyph.size.width,
                                     glyph.off.y+position.y);
       ce->verts[i*4+1].texCoord.set(glyph.topRight.u, glyph.botLeft.v);
-      ce->verts[i*4+1].color=color;
+      ce->verts[i*4+1].color    =color;
 
       ce->verts[i*4+2].position.set(glyph.off.x+position.x+glyph.size.width,
                                     glyph.off.y+position.y+glyph.size.height);
-      ce->verts[i*4+2].texCoord=glyph.topRight;
-      ce->verts[i*4+2].color=color;
+      ce->verts[i*4+2].texCoord =glyph.topRight;
+      ce->verts[i*4+2].color    =color;
 
       ce->verts[i*4+3].position.set(glyph.off.x+position.x,
                                     glyph.off.y+position.y+glyph.size.height);
       ce->verts[i*4+3].texCoord.set(glyph.botLeft.u, glyph.topRight.v);
-      ce->verts[i*4+3].color=color;
-
-      ce->tris[i*2+0].set(i*4+0, i*4+1, i*4+3);
-      ce->tris[i*2+1].set(i*4+3, i*4+1, i*4+2);
+      ce->verts[i*4+3].color    =color;
       
-      position.x+=glyph.advance; 
+      position.x+=glyph.advance;
+
+      if( msg[i] == '\n' ){
+        position.x   =m_position.x;
+        position.y  -=m_face->maxSize().y;
+      }
     }
     ce->positionDelta =position - m_position;
     m_position        =position;
@@ -136,21 +133,15 @@ namespace ngl{
   //--------------------------------------------------------------------------//
   //--------------------------------------------------------------------------//
   void Font::get_geometry(Vertex *vb, Triangle16 *ib, TextureID &texID) const{
-    // Copy vertices.
     size_t vOff =0;
+    for(Cache::const_iterator i=m_cache.begin(); i != m_cache.end(); ++i){
+      memcpy( &vb[vOff], i->verts,  (i->vertCount)  *sizeof(Font::Vertex) );
+      vOff+=i->vertCount;
+    }
     size_t tOff =0;
-    for(Cache::const_iterator it=m_cache.begin(); it!=m_cache.end(); ++it){
-      //if( it->lastUsed == m_counter - 1 ){
-        memcpy( &vb[vOff], it->verts, it->vertCount*sizeof(Vertex) );
-//         memcpy( &ib[tOff], it->tris, (it->vertCount/2)*sizeof(Vertex) );
-        // Generate triangles.
-        for(int i=vOff; i < vOff+it->vertCount; i+=4, tOff+=2){
-          ib[tOff+0].set(i+0, i+1, i+3);
-          ib[tOff+1].set(i+3, i+1, i+2);
-        }
-        vOff +=it->vertCount;
-        tOff +=it->vertCount/2;
-      //}
+    for(int i=0; i < vOff; i+=4, tOff+=2){
+      ib[tOff+0].set(i+0, i+1, i+3);
+      ib[tOff+1].set(i+3, i+1, i+2);
     }
     
     texID=m_face->atlas()->textureID();
@@ -169,9 +160,10 @@ namespace ngl{
         ++it;
       }
       else{
-//         printf( "-- [%05d]Dropping cache[%#x] %d\n", m_counter, it->hash, it->lastUsed );
+        printf( "-- [%05d-%05d]Dropping cache[%#x @ %#x] \n",
+                m_counter, it->lastUsed, it->hash, (uint32_t)it->verts );
         delete[] it->verts;
-        delete[] it->tris;
+//         delete[] it->tris;
         tmp=it;
         ++it;
         m_cache.erase(tmp);
@@ -190,9 +182,11 @@ namespace ngl{
     ce.lastUsed     =m_counter;
     ce.vertCount    =msg.length()*4;
     ce.verts        =new Vertex[ce.vertCount];
-    ce.tris         =new Triangle16[ce.vertCount/2];
+//     ce.tris         =new Triangle16[ce.vertCount/2];
     m_cacheUpdated  =false;
-//     printf( "-- [%05d]Caching msg[%#x]:\n%s\n", m_counter, ce.hash, msg.c_str() );
+    printf( "-- [%05d] Caching msg %#x @ %#x  (%d - %d)\n",
+            m_counter, ce.hash, (uint32_t)ce.verts/*, msg.c_str()*/,
+            msg.length(), ce.vertCount);
     return &ce;
   }
   //--------------------------------------------------------------------------//

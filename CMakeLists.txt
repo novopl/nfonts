@@ -6,7 +6,7 @@ option(BUILD_TESTS      "Build tests"       ON)
 set(nfonts-src    src/FontTypes.cpp
                   src/FontFace.cpp
                   src/Font.cpp
-#                   src/fonts.cpp
+                  src/FontRenderers.cpp
                   )
 set(nfonts-deps   )
 set(nfonts-inc    )

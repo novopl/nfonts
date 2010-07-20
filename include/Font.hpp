@@ -50,6 +50,8 @@ namespace ngl{
     void free(MemAddr_t addr);
   };
   class FontFace;
+  class FontCacheRenderer;
+  class FontCacheBatchRenderer;
 //==============================================================================
 /** \class Font
 \brief  Font class.
@@ -59,7 +61,7 @@ namespace ngl{
       Font(const Font &obj);
       Font& operator=(const Font &obj);
       struct CacheEntry;
-      struct Cache;
+//       struct Cache;
       
     public:
       struct RenderRequest;
@@ -100,6 +102,9 @@ namespace ngl{
       Cache       m_cache;
       bool        m_cacheUpdated;
       uint32_t    m_cacheTTL;
+
+      friend class ngl::FontCacheRenderer;
+      friend class ngl::FontCacheBatchRenderer;
   };
   //========================================================
   /** \class CacheEntry
@@ -111,7 +116,7 @@ namespace ngl{
     uint32_t    lastUsed;
     Vertex      *verts;
     int2        positionDelta;
-    Triangle16  *tris;
+//     Triangle16  *tris;
     size_t      vertCount;
 //     size_t      triCount;
   };
@@ -120,10 +125,10 @@ namespace ngl{
   \brief  Font cache.
   */
   //========================================================
-  struct Font::Cache{
-    Vertex      *verts;
-    Triangle16  *tris;
-  };
+//   struct Font::Cache{
+//     Vertex      *verts;
+//     Triangle16  *tris;
+//   };
   //========================================================
   /** \class Vertex
   \brief  Font vertex.

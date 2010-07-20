@@ -17,11 +17,14 @@ Copyright (c) 2010 Mateusz 'novo' Klos
 #include <vector>
 #include <list>
 
-
-#define GL_DBG(FUNC)                    \
-    FUNC;                               \
-    if( err=gl_error_check(#FUNC) )     \
-      return err;
+#ifdef N_DEBUG_GL
+#  define GL_DBG(FUNC)                    \
+      FUNC;                               \
+      if( err=gl_error_check(#FUNC) )     \
+        return err;
+#else
+#  define GL_DBG(FUNC) FUNC;
+#endif
 //----------------------------------------------------------------------------//
 /// Returns the offset of the given member variable.
 ///   \param[in]  CLASS class/struct in which the member resides.

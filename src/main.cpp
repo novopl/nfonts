@@ -17,6 +17,7 @@ Copyright (c) 2010 Mateusz 'novo' Klos
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <SDL/SDL.h>
+#include <FontRenderers.hpp>
 
 
 
@@ -35,6 +36,17 @@ float frame_time(Time_t &timeStamp){
   float     ret  =(curr - timeStamp)*0.001f;
   timeStamp      =curr;
   return ret;
+}
+
+template<uint32_t C>
+bool do_every(){
+  static uint32_t counter=1;
+  if( --counter )
+    return false;
+  else{
+    counter=C;
+    return true;
+  }
 }
 
 struct FrameStatus{
@@ -86,6 +98,15 @@ struct FrameStatus{
     size_t  m_vertsPerSec;
     size_t  m_trisPerSec;
 };
+void log_stats(FrameStatus &stats){
+  printf("--------------------------------\n"
+         "FPS:     %d\n"
+         "verts:   %d\ntris:    %d\n",
+          stats.fps(),
+          stats.verts(),
+          stats.tris()
+         );
+}
 
 //--------------------------------------------------------------------------//
 //--------------------------------------------------------------------------//
@@ -105,178 +126,6 @@ int set_window_geometry(uint32_t width,
   return 1;
 }
 
-
-//==============================================================================
-/** \class AbstractRenderer
-\brief  Base class for all font renderers.
-*/
-//==============================================================================
-class AbstractRenderer{
-  AbstractRenderer(const AbstractRenderer &obj)             {               }
-  AbstractRenderer& operator=(const AbstractRenderer &obj)  { return *this; }
-
-  public:
-    AbstractRenderer();
-    virtual ~AbstractRenderer();
-
-    virtual void render(const ngl::Font &font);
-    virtual void render(const ngl::Font &font);
-    
-  private:
-    
-};
-
-
-struct Renderer{
-  Renderer(){
-  }
-  ~Renderer(){
-  }
-  int state_setup();
-  int state_cleanup();
-  int legacy(const ngl::Font &font);
-  int vertex_array(const ngl::Font &font);
-
-  static const int    kNumVerts=4096;
-  ngl::Font::Vertex   vb[kNumVerts];
-  ngl::Triangle16     ib[kNumVerts/2];
-};
-//--------------------------------------------------------------------------//
-//--------------------------------------------------------------------------//
-int Renderer::state_setup(){
-  using namespace ngl;
-  float view[4];
-  Error err;
-  uint32_t attr =GL_TEXTURE_BIT
-                 | GL_TRANSFORM_BIT
-                 | GL_COLOR_BUFFER_BIT
-                 | GL_CURRENT_BIT;
-  GL_DBG( glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT)            );
-  GL_DBG( glPushAttrib(attr)                                        );
-  GL_DBG( glGetFloatv(GL_VIEWPORT, view)                            );
-  GL_DBG( glMatrixMode(GL_PROJECTION)                               );
-  GL_DBG( glPushMatrix()                                            );
-  GL_DBG( glLoadIdentity()                                          );
-  GL_DBG( glOrtho(view[0], view[2], view[1], view[3], -10.f, 10.f)  );
-  GL_DBG( glMatrixMode(GL_MODELVIEW)                                );
-  GL_DBG( glLoadIdentity()                                          );
-  GL_DBG( glEnable(GL_BLEND)                                        );
-  GL_DBG( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)         );
-  return EOk;
-}
-//--------------------------------------------------------------------------//
-//--------------------------------------------------------------------------//
-int Renderer::state_cleanup(){
-  using namespace ngl;
-  Error err;
-  GL_DBG( glMatrixMode(GL_PROJECTION);      );
-  GL_DBG( glPopMatrix();                    );
-  GL_DBG( glPopAttrib();                    );
-  GL_DBG( glPopClientAttrib();              );
-  return EOk;
-}
-//--------------------------------------------------------------------------//
-//--------------------------------------------------------------------------//
-int Renderer::legacy(const ngl::Font &font){
-  using namespace ngl;
-  TextureID     texID;
-//   ngl::Font::Vertex   *vb=new ngl::Font::Vertex[font.vertex_count()];
-//   ngl::Triangle16     *ib=new ngl::Triangle16[font.tri_count()];
-//   memset(vb, 0, sizeof(Font::Vertex)*kNumVerts);
-//   memset(ib, 0, sizeof(Triangle16)*kNumVerts/2);
-  font.get_geometry(vb, ib, texID);
-
-  const int kPrintInterval=1000;
-  static int counter=kPrintInterval-1;
-  bool printInfo=false;
-  if( printInfo && !(++counter % kPrintInterval) ){
-    printf("verts: %d\ntris:  %d\n", font.vertex_count(), font.tri_count() );
-  }
-
-//   glDisable(GL_TEXTURE_2D);
-  const Font::Vertex *v;
-
-  state_setup();
-  glBindTexture (GL_TEXTURE_2D, texID);
-  glBegin       (GL_TRIANGLES);
-  for(size_t i=0;  i < font.tri_count(); ++i){
-      v =&vb[ ib[i].a ];
-      glColor4ubv ( (byte*)&v->color );
-      glTexCoord2f( v->texCoord.u, v->texCoord.v );
-      glVertex2i  ( v->position.x, v->position.y );
-      if( !(counter % kPrintInterval) && printInfo )
-        printf("(%d, %d)[%.3f, %.3f] ; ",
-               v->position.x, v->position.y,
-               v->texCoord.u, v->texCoord.v);
-
-      v =&vb[ ib[i].b ];
-      glColor4ubv ( (byte*)&v->color );
-      glTexCoord2f( v->texCoord.u, v->texCoord.v );
-      glVertex2i  ( v->position.x, v->position.y );
-      if( !(counter % kPrintInterval) && printInfo )
-        printf("(%d, %d)[%.3f, %.3f] ; ",
-               v->position.x, v->position.y,
-               v->texCoord.u, v->texCoord.v);
-
-      v =&vb[ ib[i].c ];
-      glColor4ubv ( (byte*)&v->color );
-      glTexCoord2f( v->texCoord.u, v->texCoord.v );
-      glVertex2i  ( v->position.x, v->position.y );
-      if( !(counter % kPrintInterval) && printInfo )
-        printf("(%d, %d)[%.3f, %.3f]\n",
-               v->position.x, v->position.y,
-               v->texCoord.u, v->texCoord.v);
-  }
-  glEnd();
-
-  state_cleanup();
-
-//   delete[] vb;
-//   delete[] ib;
-
-  return EOk;
-}
-//----------------------------------------------------------------------------//
-//----------------------------------------------------------------------------//
-int Renderer::vertex_array(const ngl::Font &font){
-  using namespace ngl;;
-  TextureID     texID;
-  float         view[4];
-  font.get_geometry(vb, ib, texID);
-
-  bool        printInfo       =false;
-  const int   kPrintInterval  =500;
-  static int  counter         =kPrintInterval-1;
-  if( printInfo && !(++counter % kPrintInterval) ){
-    printf("----------------------------\n");
-    printf("verts: %d\ntris:  %d\n", font.vertex_count(), font.tri_count() );
-//     printf("view: (%.0f, %.0f)x(%.0f, %.0f)\n", view[0], view[1], view[2], view[3]);
-  }
-
-  state_setup();
-  Error err;
-  GL_DBG( glEnableClientState(GL_VERTEX_ARRAY)                      );
-  GL_DBG( glEnableClientState(GL_COLOR_ARRAY)                       );
-  GL_DBG( glEnableClientState(GL_TEXTURE_COORD_ARRAY)               );
-
-  GL_DBG( glVertexPointer(2, GL_INT,
-                          sizeof(Font::Vertex),
-                          (byte*)vb+OFFSET(Font::Vertex, position) ) );
-  GL_DBG( glTexCoordPointer(2, GL_FLOAT,
-                          sizeof(Font::Vertex),
-                          (byte*)vb+OFFSET(Font::Vertex, texCoord) ) );
-  GL_DBG( glColorPointer(4, GL_UNSIGNED_BYTE,
-                          sizeof(Font::Vertex),
-                          (byte*)vb+OFFSET(Font::Vertex, color) ) );
-
-  glDrawElements(GL_TRIANGLES, font.tri_count()*3, GL_UNSIGNED_SHORT, ib);
-
-
-  state_cleanup();
-
-  return EOk;
-}
-
 struct App{
   int init();
   void cleanup();
@@ -284,9 +133,9 @@ struct App{
   void tick(float dt);
 
 
-  Renderer    renderer;
-  ngl::Font   *font;
-  FrameStatus frameStats;
+  ngl::AbstractRenderer *renderer;
+  ngl::Font             *font;
+  FrameStatus           frameStats;
 };
 //----------------------------------------------------------------------------//
 //----------------------------------------------------------------------------//
@@ -321,6 +170,13 @@ int App::init(){
   font=new ngl::Font("Inconsolata.otf", 11);
   font->set_position( ngl::int2(5., 600-font->face()->maxSize().y) );
 
+  ngl::init_extensions();
+//   renderer  =ngl::create_renderer(ngl::Renderer::FontCache);
+//   renderer  =ngl::create_renderer(ngl::Renderer::FontCacheBatch);
+//   renderer  =ngl::create_renderer(ngl::Renderer::Legacy);
+//   renderer  =ngl::create_renderer(ngl::Renderer::VA);
+  renderer  =ngl::create_renderer(ngl::Renderer::VBO);
+
   return ngl::EOk;
 }
 //----------------------------------------------------------------------------//
@@ -331,6 +187,7 @@ void App::cleanup(){
    */
   SDL_Quit();
   ngl::freetype::cleanup();
+  delete renderer;
 }
 //----------------------------------------------------------------------------//
 //----------------------------------------------------------------------------//
@@ -338,7 +195,6 @@ int App::run(){
   int ret=init();
   if( ret != ngl::EOk )
     return ret;
-  init();
 
   Time_t      ts      =curr_time()-3000;
   bool        running =true;
@@ -377,8 +233,8 @@ void App::tick(float dt){
     glTexCoord2f(0.0f, 1.0f);   glVertex2f(-0.5f,  0.5f);
   glEnd();
 
-  char buff[128]={0};
-  snprintf(buff, 128,
+  char buff[512]={0};
+  snprintf(buff, 512,
             "FPS:     %d\n"
             //"verts/s: %d\ntris/s:  %d\n"
             "verts:   %d\ntris:    %d\n",
@@ -396,14 +252,17 @@ void App::tick(float dt){
   // 93 + stats
   // 45+93+numbers=138+numbers
   font->print(buff, ngl::Color32::lightGreen);
-  font->print(buff, ngl::Color32::lightGreen);
-  font->print(buff, ngl::Color32::lightGreen);
+//   font->print(buff, ngl::Color32::lightGreen);
+//   font->print(buff, ngl::Color32::lightGreen);
 
   font->update_cache();
-  frameStats.update(dt, font->vertex_count(), font->tri_count());
+  renderer->render(*font);
 
-  renderer.vertex_array(*font);
-//     renderer.legacy(*font);
+  frameStats.update(dt, font->vertex_count(), font->tri_count());
+  if( do_every<500>() ){
+    log_stats(frameStats);
+  }
+
 
   glFlush();
   SDL_GL_SwapBuffers();
