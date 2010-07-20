@@ -62,7 +62,7 @@ struct FrameStatus{
     }
     size_t fps() const{
       return m_fps;
-    }
+    }()
     size_t vps() const{
       return m_vertsPerSec;
     }
@@ -106,25 +106,7 @@ int set_window_geometry(uint32_t width,
 }
 
 
-//==============================================================================
-/** \class AbstractRenderer
-\brief  Base class for all font renderers.
-*/
-//==============================================================================
-class AbstractRenderer{
-  AbstractRenderer(const AbstractRenderer &obj)             {               }
-  AbstractRenderer& operator=(const AbstractRenderer &obj)  { return *this; }
 
-  public:
-    AbstractRenderer();
-    virtual ~AbstractRenderer();
-
-    virtual void render(const ngl::Font &font);
-    virtual void render(const ngl::Font &font);
-    
-  private:
-    
-};
 
 
 struct Renderer{
@@ -180,8 +162,8 @@ int Renderer::state_cleanup(){
 int Renderer::legacy(const ngl::Font &font){
   using namespace ngl;
   TextureID     texID;
-//   ngl::Font::Vertex   *vb=new ngl::Font::Vertex[font.vertex_count()];
-//   ngl::Triangle16     *ib=new ngl::Triangle16[font.tri_count()];
+  ngl::Font::Vertex   *vb=new ngl::Font::Vertex[font.vertex_count()];
+  ngl::Triangle16     *ib=new ngl::Triangle16[font.tri_count()];
 //   memset(vb, 0, sizeof(Font::Vertex)*kNumVerts);
 //   memset(ib, 0, sizeof(Triangle16)*kNumVerts/2);
   font.get_geometry(vb, ib, texID);
@@ -194,35 +176,34 @@ int Renderer::legacy(const ngl::Font &font){
   }
 
 //   glDisable(GL_TEXTURE_2D);
-  const Font::Vertex *v;
-
   state_setup();
-  glBindTexture (GL_TEXTURE_2D, texID);
-  glBegin       (GL_TRIANGLES);
+  const Font::Vertex *v;
+  glBindTexture(GL_TEXTURE_2D, texID);
+  glBegin(GL_TRIANGLES);
   for(size_t i=0;  i < font.tri_count(); ++i){
       v =&vb[ ib[i].a ];
-      glColor4ubv ( (byte*)&v->color );
-      glTexCoord2f( v->texCoord.u, v->texCoord.v );
-      glVertex2i  ( v->position.x, v->position.y );
-      if( !(counter % kPrintInterval) && printInfo )
+      glColor4ubv((byte*)&v->color);
+      glTexCoord2f(v->texCoord.u, v->texCoord.v);
+      glVertex2i(v->position.x, v->position.y);
+      if( !(counter % kPrintInterval) && printInfo)
         printf("(%d, %d)[%.3f, %.3f] ; ",
                v->position.x, v->position.y,
                v->texCoord.u, v->texCoord.v);
 
       v =&vb[ ib[i].b ];
-      glColor4ubv ( (byte*)&v->color );
-      glTexCoord2f( v->texCoord.u, v->texCoord.v );
-      glVertex2i  ( v->position.x, v->position.y );
-      if( !(counter % kPrintInterval) && printInfo )
+      glColor4ubv((byte*)&v->color);
+      glTexCoord2f(v->texCoord.u, v->texCoord.v);
+      glVertex2i(v->position.x, v->position.y);
+      if( !(counter % kPrintInterval) && printInfo)
         printf("(%d, %d)[%.3f, %.3f] ; ",
                v->position.x, v->position.y,
                v->texCoord.u, v->texCoord.v);
 
       v =&vb[ ib[i].c ];
-      glColor4ubv ( (byte*)&v->color );
-      glTexCoord2f( v->texCoord.u, v->texCoord.v );
-      glVertex2i  ( v->position.x, v->position.y );
-      if( !(counter % kPrintInterval) && printInfo )
+      glColor4ubv((byte*)&v->color);
+      glTexCoord2f(v->texCoord.u, v->texCoord.v);
+      glVertex2i(v->position.x, v->position.y);
+      if( !(counter % kPrintInterval) && printInfo)
         printf("(%d, %d)[%.3f, %.3f]\n",
                v->position.x, v->position.y,
                v->texCoord.u, v->texCoord.v);
@@ -231,8 +212,8 @@ int Renderer::legacy(const ngl::Font &font){
 
   state_cleanup();
 
-//   delete[] vb;
-//   delete[] ib;
+  delete[] vb;
+  delete[] ib;
 
   return EOk;
 }
@@ -270,7 +251,7 @@ int Renderer::vertex_array(const ngl::Font &font){
                           (byte*)vb+OFFSET(Font::Vertex, color) ) );
 
   glDrawElements(GL_TRIANGLES, font.tri_count()*3, GL_UNSIGNED_SHORT, ib);
-
+  
 
   state_cleanup();
 
@@ -339,7 +320,7 @@ int App::run(){
   if( ret != ngl::EOk )
     return ret;
   init();
-
+  
   Time_t      ts      =curr_time()-3000;
   bool        running =true;
   SDL_Event   event;
@@ -403,7 +384,7 @@ void App::tick(float dt){
   frameStats.update(dt, font->vertex_count(), font->tri_count());
 
   renderer.vertex_array(*font);
-//     renderer.legacy(*font);
+//     renderer.legacy(font);
 
   glFlush();
   SDL_GL_SwapBuffers();
@@ -419,7 +400,7 @@ int main(int argc, char **argv){
 //   TypeAA    a;
 //   TypeABB   b;
 
-
+  
   App app;
   return app.run();
 }
