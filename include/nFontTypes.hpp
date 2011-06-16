@@ -16,6 +16,7 @@ Copyright (c) 2010 Mateusz 'novo' Klos
 #include <cstring>
 #include <vector>
 #include <list>
+#include <stdint.h>
 
 #ifdef N_DEBUG_GL
 #  define GL_DBG(FUNC)                    \
@@ -33,7 +34,6 @@ Copyright (c) 2010 Mateusz 'novo' Klos
 #if !defined(offsetof)
   #define OFFSET(CLASS,MEMBER) ((ptrdiff_t)(&((CLASS *)0)->MEMBER))
 #else
-  //--((ptrdiff_t)(&((CLASS *)0)->MEMBER)) //
   #define OFFSET(CLASS,MEMBER) offsetof(CLASS,MEMBER)
 #endif
 
@@ -110,6 +110,7 @@ namespace ngl{
     static const Color32 lightBlue;
     static const Color32 darkBlue;
     static const Color32 yellow;
+    static const Color32 orange;
   };
 
 
@@ -118,28 +119,36 @@ namespace ngl{
 \brief  2D vector.
 */
 //==============================================================================
-  template<typename Type>
+  template<typename T>
   struct Vec2{
-    typedef Vec2<Type>    This;
+    typedef Vec2<T>    This;
 
     union{
       // Aliases for readability.
-      struct{ Type x, y;            };
-      struct{ Type u, v;            };
-      struct{ Type width, height;   };
-      struct{ Type min, max;        };
-      struct{ Type off, size;       };
+      struct{ T   x, y;            };
+      struct{ T   u, v;            };
+      struct{ T   width, height;   };
+      struct{ T   min, max;        };
+      struct{ T   off, size;       };
     };
 
     inline Vec2();
-    inline Vec2(Type _x, Type _y);
+    inline Vec2(T _x, T _y);
     inline Vec2(const This &obj);
+    template<typename U>
+    inline Vec2(const Vec2<U> &obj);
 
-    inline This& set(Type _x, Type _y);
+    inline This& set(T _x, T _y);
 
     This operator=(const This &obj){
       x=obj.x;
       y=obj.y;
+      return *this;
+    }
+    template<typename U>
+    This operator=(const Vec2<U> &obj){
+      x=static_cast<T>(obj.x);
+      y=static_cast<T>(obj.y);
       return *this;
     }
 
@@ -162,6 +171,14 @@ namespace ngl{
   template<typename T>
   Vec2<T>::Vec2(const This &obj)
   :x(obj.x), y(obj.y){
+  }
+  //--------------------------------------------------------------------------//
+  //--------------------------------------------------------------------------//
+  template<typename T>
+  template<typename U>
+  Vec2<T>::Vec2(const Vec2<U> &obj)
+  :x( static_cast<T>(obj.x) ),
+  y( static_cast<T>(obj.y) ){
   }
   //--------------------------------------------------------------------------//
   //--------------------------------------------------------------------------//
@@ -205,7 +222,7 @@ namespace ngl{
     return Vec2<T>(ls.x-rs, ls.y-rs);
   }
 
-  
+
 
 
 
@@ -214,23 +231,23 @@ namespace ngl{
 \brief  3D vector.
 */
 //==============================================================================
-  template<typename Type>
+  template<typename T>
   struct Vec3{
-    typedef Vec3<Type>    This;
+    typedef Vec3<T>    This;
 
     union{
       // Aliases for readability.
-      struct{ Type x, y, z;               };
-      struct{ Type u, v, w;               };
-      struct{ Type width, height, depth;  };
-      struct{ Type a, b, c;               };
+      struct{ T x, y, z;               };
+      struct{ T u, v, w;               };
+      struct{ T width, height, depth;  };
+      struct{ T a, b, c;               };
     };
 
     inline Vec3();
-    inline Vec3(Type _x, Type _y, Type _z);
+    inline Vec3(T _x, T _y, T _z);
     inline Vec3(const This &obj);
 
-    inline This& set(Type _x, Type _y, Type _z);
+    inline This& set(T _x, T _y, T _z);
 
     This operator=(const This &obj){
       x=obj.x;
@@ -344,5 +361,11 @@ namespace ngl{
       size_t    m_available;
       FreeList  m_free;
   };
+
+  
+  namespace freetype{
+    extern bool init();
+    extern void cleanup();
+  }
 }
 #endif/* __FONTS_TYPES_HPP__ */

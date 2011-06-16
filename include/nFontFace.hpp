@@ -12,7 +12,7 @@ Copyright (c) 2010 Mateusz 'novo' Klos
 #if !defined(__FONTS_FONTFACE_HPP__)
 #define __FONTS_FONTFACE_HPP__
 
-#include <FontTypes.hpp>
+#include "nFontTypes.hpp"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_OUTLINE_H
@@ -47,12 +47,6 @@ namespace ngl{
       size_t        m_currRowHeight;
   };
 
-  namespace freetype{
-    extern bool init();
-    extern void cleanup();
-    extern bool initialized();
-    extern const FT_Library& handle();
-  }
 //==============================================================================
 /** \brief  Font face.
 */
@@ -88,5 +82,12 @@ namespace ngl{
       FT_Face       m_ftFace;
       Glyphs        m_glyphs;
   };
+  
+  namespace freetype{
+    extern bool init();
+    extern void cleanup();
+    extern bool initialized();
+    extern const FT_Library& handle();
+  }
 }
 #endif/* __FONTS_FONTFACE_HPP__ */

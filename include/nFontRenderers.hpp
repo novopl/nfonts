@@ -12,7 +12,7 @@ Copyright (c) 2010 Mateusz 'novo' Klos
 #if !defined(__NGL_FONTRENDERERS_HPP__)
 #define __NGL_FONTRENDERERS_HPP__
 
-#include <Font.hpp>
+#include "nFont.hpp"
 
 namespace ngl{
 //==============================================================================
@@ -55,10 +55,10 @@ class AbstractRenderer{
       virtual int render(const Font &font);
 
     private:
-      static const int  kNumVerts=4096;
-      Font::Vertex      vb[kNumVerts];
-      Triangle16        ib[kNumVerts/2];
-
+      int extend_buffers(uint32_t vertCount);
+      uint32_t      m_vertCount;
+      Font::Vertex  *m_vb;
+      Triangle16    *m_ib;
   };
 //==============================================================================
 /** \class VARenderer
@@ -103,46 +103,13 @@ class AbstractRenderer{
       uint32_t    m_ib;
       uint32_t    m_vertCount;
   };
-//==============================================================================
-/** \class FontCacheRenderer
-\brief  Direct font cache renderer.
-*/
-//==============================================================================
-  class FontCacheRenderer : public AbstractRenderer{
-    FontCacheRenderer(const FontCacheRenderer &obj)             {               }
-    FontCacheRenderer& operator=(const FontCacheRenderer &obj)  { return *this; }
 
-    public:
-      FontCacheRenderer();
-      virtual ~FontCacheRenderer();
-
-      virtual int render(const Font &font);
-  };
-//==============================================================================
-/** \class FontCacheRenderer
-\brief  Direct font cache renderer.
-*/
-//==============================================================================
-  class FontCacheBatchRenderer : public AbstractRenderer{
-    FontCacheBatchRenderer(const FontCacheBatchRenderer &obj)             {               }
-    FontCacheBatchRenderer& operator=(const FontCacheBatchRenderer &obj)  { return *this; }
-
-    public:
-      FontCacheBatchRenderer();
-      virtual ~FontCacheBatchRenderer();
-
-      virtual int render(const Font &font);
-
-    private:
-  };
-
+  
   namespace Renderer{
     enum RendererType{
       Legacy,
       VA,
-      VBO,
-      FontCache,
-      FontCacheBatch
+      VBO
     };
   }
   using Renderer::RendererType;

@@ -3,16 +3,17 @@ cmake_minimum_required(VERSION 2.6)
 
 option(BUILD_TESTS      "Build tests"       ON)
 
-set(nfonts-src    src/FontTypes.cpp
-                  src/FontFace.cpp
-                  src/Font.cpp
-                  src/FontRenderers.cpp
-                  )
+set(nfonts-src    src/nFontTypes.cpp
+                  src/nFontFace.cpp
+                  src/nFont.cpp
+                  src/nFontRenderers.cpp
+                  src/nSDLFramework.cpp)
 set(nfonts-deps   )
 set(nfonts-inc    )
 
 include_directories(../common/include)
 include_directories(./include)
+include_directories(./lib/nlogger/include)
 
 #========================================
 # OpenGL
@@ -39,24 +40,8 @@ endforeach()
 add_library           (nfonts ${nfonts-src} )
 target_link_libraries (nfonts ${nfonts-deps})
 
-#========================================
-# nlibs integration.
-if(NLIBS_GLOBAL_BUILD)
-  nlibs_add_libs  ( nfonts )
-  nlibs_inc_dirs  ( ${nfonts-inc} )
-  nlibs_add_deps  ( ${nfonts-deps} )
-  foreach(src_file ${nfonts-src})
-    nlibs_add_source( ${CMAKE_CURRENT_SOURCE_DIR}/${src_file} )
-  endforeach()
-endif()
-
-if( NLIBS_BUILD_EVERYTHING OR NOT NLIBS_GLOBAL_BUILD )
-  add_executable        (main_nfonts  src/main.cpp )
-  target_link_libraries (main_nfonts  nfonts)
-  if( NLIBS_GLOBAL_BUILD )
-    nlibs_add_bin (main_nfonts)
-  endif()
-endif()
+add_executable        (main_nfonts  src/main.cpp )
+target_link_libraries (main_nfonts  nfonts)
 
 #========================================
 # Tests
@@ -65,9 +50,6 @@ if(BUILD_TESTS)
   if(CXXTEST_FOUND)
     aux_source_directory(tests  tests-src)
     if( tests-src )
-      message("--------------------------------")
-      message("-- Building nfonts tests")
-
       include_directories(${CXXTEST_INCLUDE_DIR})
       set(tests_SOURCES           ${tests-src} )
       set(tests_DEPS              cppunit nfonts)

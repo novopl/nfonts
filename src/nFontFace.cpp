@@ -9,7 +9,7 @@
 Copyright (c) 2010 Mateusz 'novo' Klos
 */
 //==============================================================================
-#include <FontFace.hpp>
+#include "nFontFace.hpp"
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -52,25 +52,25 @@ namespace ngl{
   //--------------------------------------------------------------------------//
   //--------------------------------------------------------------------------//
   Error GlyphAtlas::add_glyph(Glyph &out, const byte *rgbData, const Size2 &size){
-//     printf("-- Adding glyph: '%c'\n", out.code);
     // If the glyph is too wide, go to next row.
     if( m_freeOff.x + size.width > m_size.width ){
       m_freeOff.y +=m_currRowHeight;
       m_freeOff.x  =0;
     }
 
-    if( m_freeOff.y+size.height > m_size.height || m_freeOff.x+size.width > m_size.width )
+    if( m_freeOff.y+size.height > m_size.height ||
+        m_freeOff.x+size.width  > m_size.width   )
       return ENotEnoughMemory;
 
     Error err;
-    GL_DBG( glPushAttrib(GL_TEXTURE_BIT)                                      );
-    GL_DBG( glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT)                     );
-    GL_DBG( glBindTexture(GL_TEXTURE_2D, m_texture)                           );
-    GL_DBG( glPixelStorei(GL_UNPACK_ALIGNMENT,    1)                          );
-    GL_DBG( glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE)                   );
-    GL_DBG( glPixelStorei(GL_UNPACK_SKIP_ROWS,    GL_FALSE)                   );
-    GL_DBG( glPixelStorei(GL_UNPACK_SKIP_PIXELS,  GL_FALSE)                   );
-    GL_DBG( glPixelStorei(GL_UNPACK_ROW_LENGTH,   static_cast<GLint>(size.width)) );
+    GL_DBG( glPushAttrib(GL_TEXTURE_BIT)                              );
+    GL_DBG( glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT)             );
+    GL_DBG( glBindTexture(GL_TEXTURE_2D, m_texture)                   );
+    GL_DBG( glPixelStorei(GL_UNPACK_ALIGNMENT,    1)                  );
+    GL_DBG( glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE)           );
+    GL_DBG( glPixelStorei(GL_UNPACK_SKIP_ROWS,    GL_FALSE)           );
+    GL_DBG( glPixelStorei(GL_UNPACK_SKIP_PIXELS,  GL_FALSE)           );
+    GL_DBG( glPixelStorei(GL_UNPACK_ROW_LENGTH,   (GLint)size.width)  );
 
     GL_DBG( glTexSubImage2D(GL_TEXTURE_2D,
                             0,
@@ -97,22 +97,17 @@ namespace ngl{
 
     return EOk;
   }
-#define _DEBUG
   //--------------------------------------------------------------------------//
   //--------------------------------------------------------------------------//
   Error GlyphAtlas::init_atlas(size_t width, size_t height){
     Error err;
-    byte *data=NULL;
-#if defined(_DEBUG)
-    data=new byte[width*height];
-    memset(data, 0xff, width*height);
-#endif
     GL_DBG( glPushAttrib(GL_TEXTURE_BIT)                                      );
     GL_DBG( glGenTextures(1, &m_texture) );
     GL_DBG( glBindTexture(GL_TEXTURE_2D, m_texture)                           );
     GL_DBG( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST) );
     GL_DBG( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) );
-    GL_DBG( glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, data) );
+    GL_DBG( glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0,
+                         GL_ALPHA, GL_UNSIGNED_BYTE, 0)                       );
     GL_DBG( glPopAttrib() );
 
     m_size.set(width, height);
@@ -130,7 +125,8 @@ namespace ngl{
   //--------------------------------------------------------------------------//
   /// \brief  Default constructor.
   //--------------------------------------------------------------------------//
-  FontFace::FontFace(const String &face, size_t size){
+  FontFace::FontFace(const String &face, size_t size)
+  :m_ftFace(0){
     load(face, size);
   }
   //--------------------------------------------------------------------------//
@@ -143,6 +139,8 @@ namespace ngl{
   /// \brief  Destructor.
   //--------------------------------------------------------------------------//
   FontFace::~FontFace(){
+    FT_Done_Face(m_ftFace);
+    delete m_atlas;
   }
   //--------------------------------------------------------------------------//
   /// \brief  Assign operator
@@ -250,6 +248,9 @@ namespace ngl{
   //--------------------------------------------------------------------------//
   //--------------------------------------------------------------------------//
   const Glyph& FontFace::get_glyph(char code){
+    if( !m_ftFace )
+      return Glyph::null;
+    
     bool isTab = false;
     if( code == '\t' ){
       code  =' ';

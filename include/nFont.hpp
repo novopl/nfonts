@@ -12,7 +12,7 @@ Copyright (c) 2010 Mateusz 'novo' Klos
 #if !defined(__FONTS_FONT_HPP__)
 #define __FONTS_FONT_HPP__
 
-#include "FontTypes.hpp"
+#include "nFontTypes.hpp"
 #include <vector>
 #include <list>
 
@@ -49,6 +49,7 @@ namespace ngl{
     MemAddr_t alloc(size_t size);
     void free(MemAddr_t addr);
   };
+  
   class FontFace;
   class FontCacheRenderer;
   class FontCacheBatchRenderer;
@@ -58,41 +59,38 @@ namespace ngl{
 */
 //==============================================================================
   class Font{
-      Font(const Font &obj);
-      Font& operator=(const Font &obj);
-      struct CacheEntry;
-//       struct Cache;
-      
     public:
       struct RenderRequest;
       struct Vertex;
       
-    public:
       Font(const String &face, size_t sizeInPt);
       virtual ~Font();
 
       size_t  tri_count()                                                 const;
       size_t  vertex_count()                                              const;
-      
+
+      void init_position(const int screenHeight);
       void set_position(const int2 &position);
       void print(const String &msg, const Color32 &color=Color32::white);
+      void cprint(const String &msg);
       void get_geometry(Vertex *vb, Triangle16 *ib, TextureID &texID)  const;
       void update_cache();
 
       FontFace *face() { return m_face; }
       
     private:
+      struct CacheEntry;
       typedef std::vector<Vertex>       Vertices;
       typedef std::vector<Triangle16>   Triangles;
       typedef std::list<CacheEntry>     Cache;
+      
+      Font(const Font &obj);
+      Font& operator=(const Font &obj);
 
       CacheEntry* cache(const String &msg);
       CacheEntry* find_cached(const String &msg);
-      void generate(Vertex *vb, size_t vOff,
-                    const Glyph &glyph,
-                    const int2 &pos,
-                    const Color32 &color);
-      void generate(const Glyph &glyph, const int2 &pos, const Color32 &color);
+      void generate(Vertex *verts, int index, const Glyph &glyph,
+                    const int2 &position, Color32 color);
       
       FontFace    *m_face;
       int2        m_position;
@@ -116,19 +114,8 @@ namespace ngl{
     uint32_t    lastUsed;
     Vertex      *verts;
     int2        positionDelta;
-//     Triangle16  *tris;
     size_t      vertCount;
-//     size_t      triCount;
   };
-  //========================================================
-  /** \class Cache
-  \brief  Font cache.
-  */
-  //========================================================
-//   struct Font::Cache{
-//     Vertex      *verts;
-//     Triangle16  *tris;
-//   };
   //========================================================
   /** \class Vertex
   \brief  Font vertex.

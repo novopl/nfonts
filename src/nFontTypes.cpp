@@ -9,7 +9,7 @@
 Copyright (c) 2010 Mateusz 'novo' Klos
 */
 //==============================================================================
-#include <FontTypes.hpp>
+#include "nFontTypes.hpp"
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -57,6 +57,7 @@ namespace ngl{
   const Color32  Color32::lightBlue (0xffffa060);
   const Color32  Color32::darkBlue  (0xff800000);
   const Color32  Color32::yellow    (0xff00ffff);
+  const Color32  Color32::orange    (0xff3a96c4);
 
 
   //--------------------------------------------------------------------------//

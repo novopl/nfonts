@@ -9,19 +9,21 @@
 Copyright (c) 2010 Mateusz 'novo' Klos
 */
 //==============================================================================
-#include "Font.hpp"
-#include "FontFace.hpp"
+#include "nFont.hpp"
+#include "nFontRenderers.hpp"
+#include "nSDLFramework.hpp"
 
 #include <sys/time.h>
 #include <cstdio>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <SDL/SDL.h>
-#include <FontRenderers.hpp>
 
 
 
 typedef int64_t   Time_t;   // usec
+//--------------------------------------------------------------------------//
+//--------------------------------------------------------------------------//
 Time_t curr_time(){
   timeval tv;
   gettimeofday(&tv, 0);
@@ -37,56 +39,31 @@ float frame_time(Time_t &timeStamp){
   timeStamp      =curr;
   return ret;
 }
-
+//--------------------------------------------------------------------------//
+//--------------------------------------------------------------------------//
 template<uint32_t C>
 bool do_every(){
   static uint32_t counter=1;
-  if( --counter )
-    return false;
-  else{
+  if( !(--counter) )
     counter=C;
-    return true;
-  }
+  return counter==C;
 }
 
+//==============================================================================
+/** \struct App
+\brief  Application.
+*/
+//==============================================================================
 struct FrameStatus{
-    FrameStatus()
-    :m_numFrames(0), m_timeAcc(0.f), m_vertAcc(0), m_triAcc(0),
-    m_fps(0), m_vertsPerSec(0), m_trisPerSec(0),
-    m_verts(0), m_tris(0){
-    }
+    inline FrameStatus();
 
-    void update(float dtInMs, size_t verts, size_t tris){
-      m_vertAcc   +=verts;
-      m_triAcc    +=tris;
-      m_timeAcc +=dtInMs;
-      ++m_numFrames;
-      if( m_timeAcc > 1000.0f ){
-        m_fps         =m_numFrames;
-        m_vertsPerSec =m_vertAcc;
-        m_trisPerSec  =m_triAcc;
-        m_verts       =verts;
-        m_tris        =tris;
-
-        m_timeAcc-=1000.0f;
-        m_numFrames=m_vertAcc=m_triAcc=0;
-      }
-    }
-    size_t fps() const{
-      return m_fps;
-    }
-    size_t vps() const{
-      return m_vertsPerSec;
-    }
-    size_t tps() const{
-      return m_trisPerSec;
-    }
-    size_t verts() const{
-      return m_verts;
-    }
-    size_t tris() const{
-      return m_tris;
-    }
+    inline void update(float dtInMs, size_t verts, size_t tris);
+    size_t fps()    const { return m_fps;         }
+    size_t vps()    const { return m_vertsPerSec; }
+    size_t tps()    const { return m_trisPerSec;  }
+    size_t verts()  const { return m_verts;       }
+    size_t tris()   const { return m_tris;        }
+    
   private:
     size_t  m_numFrames;
     float   m_timeAcc;
@@ -98,174 +75,140 @@ struct FrameStatus{
     size_t  m_vertsPerSec;
     size_t  m_trisPerSec;
 };
-void log_stats(FrameStatus &stats){
-  printf("--------------------------------\n"
-         "FPS:     %d\n"
-         "verts:   %d\ntris:    %d\n",
-          stats.fps(),
-          stats.verts(),
-          stats.tris()
-         );
+//--------------------------------------------------------------------------//
+//--------------------------------------------------------------------------//
+FrameStatus::FrameStatus()
+:m_numFrames(0), m_timeAcc    (0.f),  m_vertAcc   (0), m_triAcc(0),
+m_fps       (0), m_vertsPerSec(0),    m_trisPerSec(0),
+m_verts     (0), m_tris       (0){
 }
+//--------------------------------------------------------------------------//
+//--------------------------------------------------------------------------//
+void FrameStatus::update(float dtInMs, size_t verts, size_t tris){
+  m_vertAcc   +=verts;
+  m_triAcc    +=tris;
+  m_timeAcc +=dtInMs;
+  ++m_numFrames;
+  if( m_timeAcc > 1000.0f ){
+    m_fps         =m_numFrames;
+    m_vertsPerSec =m_vertAcc;
+    m_trisPerSec  =m_triAcc;
+    m_verts       =verts;
+    m_tris        =tris;
 
-//--------------------------------------------------------------------------//
-//--------------------------------------------------------------------------//
-int set_window_geometry(uint32_t width,
-                        uint32_t height,
-                        uint32_t bpp){
-  if( !SDL_SetVideoMode(width, height, bpp, SDL_OPENGL | SDL_RESIZABLE) ){
-    fprintf(stderr, "SDL_SetVideoMode failed\n");
-    return 0;
+    m_timeAcc-=1000.0f;
+    m_numFrames=m_vertAcc=m_triAcc=0;
   }
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(45.0f, (float)width/height, .1f, 1024.0f);
-
-  glViewport(0, 0, width, height);
-
-  return 1;
 }
 
-struct App{
-  int init();
-  void cleanup();
-  int run();
-  void tick(float dt);
 
+//==============================================================================
+/** \class App
+\brief  SDL framework application.
+*/
+//==============================================================================
+class App : public ngl::AppInterface{
+  App(const App &obj)             {               }
+  App& operator=(const App &obj)  { return *this; }
 
-  ngl::AbstractRenderer *renderer;
-  ngl::Font             *font;
-  FrameStatus           frameStats;
+  public:
+    App();
+    virtual ~App();
+    
+    virtual int   init(int argc, char **argv);
+    virtual int   cleanup();
+    virtual int   tick();
+
+  private:
+    ngl::AbstractRenderer *renderer;
+    ngl::Font             *font;
+    FrameStatus           frameStats;
 };
-//----------------------------------------------------------------------------//
-//----------------------------------------------------------------------------//
-int App::init(){
-  /*
-   * Init
-   */
-  {
-    if( SDL_Init(SDL_INIT_VIDEO) ){
-      return -1;
-    }
-    set_window_geometry(800, 600, 32);
-
-    SDL_EnableUNICODE(0);
-    SDL_WM_SetCaption("fonts", NULL);
-  }
-  {
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-    glFrontFace(GL_CCW);
-    glDisable(GL_CULL_FACE);
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-//     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-//     glDisable(GL_TEXTURE_2D);
-  }
-
-  ngl::freetype::init();
-  font=new ngl::Font("Inconsolata.otf", 11);
-  font->set_position( ngl::int2(5., 600-font->face()->maxSize().y) );
-
+//--------------------------------------------------------------------------//
+//--------------------------------------------------------------------------//
+App::App(){
+  
+}
+//--------------------------------------------------------------------------//
+//--------------------------------------------------------------------------//
+App::~App(){
+  
+}
+//--------------------------------------------------------------------------//
+//--------------------------------------------------------------------------//
+int App::init(int argc, char **argv){
   ngl::init_extensions();
-//   renderer  =ngl::create_renderer(ngl::Renderer::FontCache);
-//   renderer  =ngl::create_renderer(ngl::Renderer::FontCacheBatch);
-//   renderer  =ngl::create_renderer(ngl::Renderer::Legacy);
-//   renderer  =ngl::create_renderer(ngl::Renderer::VA);
+  ngl::freetype::init();
+
+  font      =new ngl::Font("Inconsolata.otf", 11);
   renderer  =ngl::create_renderer(ngl::Renderer::VBO);
+  //renderer  =ngl::create_renderer(ngl::Renderer::VA);
+  //renderer  =ngl::create_renderer(ngl::Renderer::Legacy);
+
+  font->init_position( 600 );
 
   return ngl::EOk;
 }
-//----------------------------------------------------------------------------//
-//----------------------------------------------------------------------------//
-void App::cleanup(){
-  /*
-   * Cleanup
-   */
-  SDL_Quit();
+//--------------------------------------------------------------------------//
+//--------------------------------------------------------------------------//
+int App::cleanup(){
   ngl::freetype::cleanup();
   delete renderer;
-}
-//----------------------------------------------------------------------------//
-//----------------------------------------------------------------------------//
-int App::run(){
-  int ret=init();
-  if( ret != ngl::EOk )
-    return ret;
-
-  Time_t      ts      =curr_time()-3000;
-  bool        running =true;
-  SDL_Event   event;
-  while(running){
-    while(SDL_PollEvent(&event)){
-      if( event.type==SDL_QUIT )
-        running =false;
-      else if( event.type==SDL_VIDEORESIZE )
-        set_window_geometry(event.resize.w, event.resize.h, 32);
-      else if( event.type==SDL_KEYDOWN ){
-        if( event.key.keysym.sym == SDLK_ESCAPE )
-          running =false;
-      }
-    }
-    tick( frame_time(ts) );
-  }
-  cleanup();
+  delete font;
   return ngl::EOk;
 }
-//----------------------------------------------------------------------------//
-//----------------------------------------------------------------------------//
-void App::tick(float dt){
+//--------------------------------------------------------------------------//
+//--------------------------------------------------------------------------//
+int App::tick(){
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glTranslatef(0.0f, 0.0f, -2.0f);
-
-  glBindTexture(GL_TEXTURE_2D, font->face()->atlas()->textureID());
-  glBegin(GL_QUADS);
-    glTexCoord2f(0.0f, 0.0f);   glVertex2f(-0.5f, -0.5f);
-    glTexCoord2f(1.0f, 0.0f);   glVertex2f( 0.5f, -0.5f);
-    glTexCoord2f(1.0f, 1.0f);   glVertex2f( 0.5f,  0.5f);
-    glTexCoord2f(0.0f, 1.0f);   glVertex2f(-0.5f,  0.5f);
-  glEnd();
-
-  char buff[512]={0};
-  snprintf(buff, 512,
-            "FPS:     %d\n"
-            //"verts/s: %d\ntris/s:  %d\n"
-            "verts:   %d\ntris:    %d\n",
+  char cbuff[128]={0};
+  snprintf(cbuff, 128,
+            "^3FPS:     ^07%d\n"
+            "^3verts/s: ^07%d\n^3tris/s:  ^07%d\n"
+            "^3verts:   ^07%d\n^3tris:    ^07%d\n",
             frameStats.fps(),
-            //frameStats.vps(),
-            //frameStats.tps(),
+            frameStats.vps(),
+            frameStats.tps(),
             frameStats.verts(),
             frameStats.tris()
-            );//45+numbers
-//     font.print(buff, ngl::Color32::lightGreen);
-  font->print("Testing, one, two, testing\n", ngl::Color32::yellow);
-  font->print("Lorem ipsum sit dolor amet\n", ngl::Color32::lightGreen);
-  font->print("Lorem ipsum sit dolor amet\n", ngl::Color32::lightRed);
-  font->print("Hello, world!!!\n", ngl::Color32::lightBlue);
-  // 93 + stats
-  // 45+93+numbers=138+numbers
-  font->print(buff, ngl::Color32::lightGreen);
-//   font->print(buff, ngl::Color32::lightGreen);
-//   font->print(buff, ngl::Color32::lightGreen);
+            );
+  font->cprint(cbuff);
+  font->cprint("^4Testing, ^5one, ^6two, ^7testing\n");
+
+  font->print("Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Lorem ipsum sit dolor amet. Lorem ipsum sit dolor amet\n", ngl::Color32::white);
+  font->print("Hello, world!!!\n", ngl::Color32::red);
 
   font->update_cache();
   renderer->render(*font);
 
-  frameStats.update(dt, font->vertex_count(), font->tri_count());
-  if( do_every<500>() ){
-    log_stats(frameStats);
-  }
+  frameStats.update(ngl::app::frame_time(), font->vertex_count(), font->tri_count());
 
-
-  glFlush();
-  SDL_GL_SwapBuffers();
+  return ngl::EOk;
 }
 
 
@@ -274,11 +217,23 @@ void App::tick(float dt){
 //--------------------------------------------------------------------------//
 //--------------------------------------------------------------------------//
 int main(int argc, char **argv){
+  using namespace ngl;
 
-//   TypeAA    a;
-//   TypeABB   b;
+  Error errCode;
+  if( (errCode =app::setup( new App() ))  != EOk )    return errCode;
+  if( (errCode =app::init(argc, argv))    != EOk )    return errCode;
 
+  app::run();
+  app::cleanup();
 
-  App app;
-  return app.run();
+  return 0;
+  
+//   ngl::Error errCode;
+//   ngl::app::setup(new App());
+//   errCode=ngl::app::init(argc, argv);
+//   if( errCode != ngl::EOk )
+//     return errCode;
+// 
+//   ngl::app::run();
+//   ngl::app::cleanup();
 }
