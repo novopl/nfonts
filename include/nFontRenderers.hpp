@@ -1,4 +1,4 @@
-//==============================================================================
+//======================================================================
 /**
 \file            FontRenderers.hpp
 \author          Mateusz 'novo' Klos
@@ -8,21 +8,23 @@
 
 Copyright (c) 2010 Mateusz 'novo' Klos
 */
-//==============================================================================
+//======================================================================
 #if !defined(__NGL_FONTRENDERERS_HPP__)
 #define __NGL_FONTRENDERERS_HPP__
 
 #include "nFont.hpp"
 
 namespace ngl{
-//==============================================================================
+//======================================================================
 /** \class AbstractRenderer
 \brief  Base class for all font renderers.
 */
-//==============================================================================
+//======================================================================
 class AbstractRenderer{
-  AbstractRenderer(const AbstractRenderer &obj)             {               }
-  AbstractRenderer& operator=(const AbstractRenderer &obj)  { return *this; }
+  AbstractRenderer(const AbstractRenderer &obj){}
+  AbstractRenderer& operator=(const AbstractRenderer &obj){ 
+    return *this; 
+  }
 
   public:
     AbstractRenderer();
@@ -39,14 +41,16 @@ class AbstractRenderer{
   private:
 
 };
-//==============================================================================
+//======================================================================
 /** \class LegacyRenderer
 \brief  Legacy renderer(glVertex).
 */
-//==============================================================================
+//======================================================================
   class LegacyRenderer : public AbstractRenderer{
-    LegacyRenderer(const LegacyRenderer &obj)             {               }
-    LegacyRenderer& operator=(const LegacyRenderer &obj)  { return *this; }
+    LegacyRenderer(const LegacyRenderer &obj){}
+    LegacyRenderer& operator=(const LegacyRenderer &obj){ 
+      return *this; 
+    }
 
     public:
       LegacyRenderer();
@@ -60,11 +64,11 @@ class AbstractRenderer{
       Font::Vertex  *m_vb;
       Triangle16    *m_ib;
   };
-//==============================================================================
+//======================================================================
 /** \class VARenderer
 \brief  Vertex array renderer.
 */
-//==============================================================================
+//======================================================================
   class VARenderer : public AbstractRenderer{
     VARenderer(const VARenderer &obj)             {               }
     VARenderer& operator=(const VARenderer &obj)  { return *this; }
@@ -81,11 +85,11 @@ class AbstractRenderer{
       Triangle16        ib[kNumVerts/2];
   };
   
-//==============================================================================
+//======================================================================
 /** \class VBORenderer
 \brief  Vertex buffer object renderer.
 */
-//==============================================================================
+//======================================================================
   class VBORenderer : public AbstractRenderer{
     VBORenderer(const VBORenderer &obj)             {               }
     VBORenderer& operator=(const VBORenderer &obj)  { return *this; }

@@ -1,4 +1,4 @@
-//==============================================================================
+//======================================================================
 /**
 \file            FontFace.hpp
 \author          Mateusz 'novo' Klos
@@ -8,7 +8,7 @@
 
 Copyright (c) 2010 Mateusz 'novo' Klos
 */
-//==============================================================================
+//======================================================================
 #if !defined(__FONTS_FONTFACE_HPP__)
 #define __FONTS_FONTFACE_HPP__
 
@@ -22,11 +22,11 @@ Copyright (c) 2010 Mateusz 'novo' Klos
 namespace ngl{
   typedef std::vector<Glyph> Glyphs;
 
-//==============================================================================
+//======================================================================
 /** \class GlyphAtlas
 \brief  Glyph atlas.
 */
-//==============================================================================
+//======================================================================
   class GlyphAtlas{
       GlyphAtlas(const GlyphAtlas &obj);
       GlyphAtlas& operator=(const GlyphAtlas &obj);
@@ -34,8 +34,7 @@ namespace ngl{
       GlyphAtlas(size_t width, size_t height);
       virtual ~GlyphAtlas();
 
-
-      Error add_glyph(Glyph &out, const byte *rgbData, const Size2 &size);
+      Error add_glyph(Glyph &out, const byte *data, const Size2 &size);
 
       TextureID textureID() const   { return m_texture; }
     private:
@@ -47,10 +46,10 @@ namespace ngl{
       size_t        m_currRowHeight;
   };
 
-//==============================================================================
+//======================================================================
 /** \brief  Font face.
 */
-//==============================================================================
+//======================================================================
   class FontFace{
       FontFace(const FontFace &obj);
       FontFace& operator=(const FontFace &obj);

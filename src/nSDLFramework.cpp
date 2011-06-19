@@ -1,4 +1,4 @@
-//==============================================================================
+//======================================================================
 /**
 \file            SDLFramework.cpp
 \author          Mateusz 'novo' Klos
@@ -8,7 +8,7 @@
 
 Copyright (c) 2010 Mateusz 'novo' Klos
 */
-//==============================================================================
+//======================================================================
 #include "nSDLFramework.hpp"
 #include "nLogger.hpp"
 
@@ -27,7 +27,9 @@ namespace ngl{
     struct SystemClock{
       SystemClock(){
         Time_t freq;
-        QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&freq));
+        QueryPerformanceFrequency(
+            reinterpret_cast<LARGE_INTEGER*>(&freq)
+          );
         m_conversionConstant=1000000.0/freq;
       }
 
@@ -72,19 +74,19 @@ namespace ngl{
       FrameTimer        frameTimer;
     } g_context;
 
-    //------------------------------------------------------------------------//
-    //------------------------------------------------------------------------//
+    //----------------------------------------------------------------//
+    //----------------------------------------------------------------//
     float frame_time(){
       return g_context.frameTimer.frame_time();
     }
-    //------------------------------------------------------------------------//
-    //------------------------------------------------------------------------//
+    //----------------------------------------------------------------//
+    //----------------------------------------------------------------//
     int setup(ngl::AppInterface *app){
       g_context.app   =app;
       return ngl::EOk;
     }
-    //------------------------------------------------------------------------//
-    //------------------------------------------------------------------------//
+    //----------------------------------------------------------------//
+    //----------------------------------------------------------------//
     int init(int argc, char **argv){
       //  Init SDL
       {
@@ -94,7 +96,8 @@ namespace ngl{
         set_window_geometry(800, 600, 32, Window::Normal);
 
         SDL_EnableUNICODE(0);
-        SDL_WM_SetCaption( (argc > 0 ? argv[0] : "simple framework"), NULL );
+        SDL_WM_SetCaption((argc > 0 ? argv[0] : "simple framework"),
+                          NULL );
       }
       {
         glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
@@ -110,8 +113,8 @@ namespace ngl{
 
       return g_context.app->init(argc, argv);
     }
-    //------------------------------------------------------------------------//
-    //------------------------------------------------------------------------//
+    //----------------------------------------------------------------//
+    //----------------------------------------------------------------//
     int cleanup(){
       int ret=g_context.app->cleanup();
       if( g_context.app )
@@ -120,8 +123,8 @@ namespace ngl{
       SDL_Quit();
       return ret;
     }
-    //------------------------------------------------------------------------//
-    //------------------------------------------------------------------------//
+    //----------------------------------------------------------------//
+    //----------------------------------------------------------------//
     int run(){
       static SystemClock sc;
 
@@ -135,7 +138,8 @@ namespace ngl{
             running=false;
           }
           else if(event.type==SDL_VIDEORESIZE){
-            set_window_geometry(event.resize.w, event.resize.h, 32, Window::Normal);
+            set_window_geometry(event.resize.w, event.resize.h, 32, 
+                                Window::Normal);
           }
           
           if( (errCode=g_context.app->on_event(&event)) != ngl::EOk ){
@@ -146,7 +150,8 @@ namespace ngl{
         }
 
         g_context.frameTimer.lap();
-        if( errCode == EOk && (errCode =g_context.app->tick()) != ngl::EOk )
+        if( errCode                           == EOk && 
+            (errCode = g_context.app->tick()) != ngl::EOk )
           running=false;
 
         glFlush();
@@ -154,16 +159,14 @@ namespace ngl{
       }
       return errCode;
     }
-    //------------------------------------------------------------------------//
-    //------------------------------------------------------------------------//
-    int set_window_geometry(uint32_t width,
-                            uint32_t height,
-                            uint32_t bpp,
-                            WindowType type){
-      if( !SDL_SetVideoMode(width, height, bpp,
-                            SDL_OPENGL | SDL_RESIZABLE |
-                            (type==Window::Fullscreen ? SDL_FULLSCREEN : 0)
-                            )){
+    //----------------------------------------------------------------//
+    //----------------------------------------------------------------//
+    int set_window_geometry(uint32_t width, uint32_t    height,
+                            uint32_t bpp,   WindowType  type){
+      int flags = SDL_OPENGL | SDL_RESIZABLE |
+                  ( type == Window::Fullscreen ? SDL_FULLSCREEN : 0);
+
+      if( !SDL_SetVideoMode(width, height, bpp, flags) ){
         novo::logerr("SDL_SetVideoMode failed\n");
         return 0;
       }
