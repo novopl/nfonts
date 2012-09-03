@@ -37,6 +37,11 @@ foreach( inc_dir ${nfonts-inc} )
   include_directories( ${inc_dir} )
 endforeach()
 
+# Enable C++11 support
+if(CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_CXX_FLAGS "-std=c++0x")        ## Optimize
+endif()
+
 add_library           (nfonts ${nfonts-src} )
 target_link_libraries (nfonts ${nfonts-deps})
 
