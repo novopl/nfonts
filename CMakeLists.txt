@@ -14,7 +14,6 @@ set(nfonts-inc    )
 
 include_directories(../common/include)
 include_directories(./include)
-include_directories(./lib/nlogger/include)
 
 #========================================
 # OpenGL

@@ -10,7 +10,6 @@ Copyright (c) 2010 Mateusz 'novo' Klos
 */
 //======================================================================
 #include "nSDLFramework.hpp"
-#include "nLogger.hpp"
 
 #include <SDL/SDL.h>
 #include <GL/gl.h>
@@ -119,7 +118,7 @@ namespace ngl{
       int ret=g_context.app->cleanup();
       if( g_context.app )
         delete g_context.app;
-      
+
       SDL_Quit();
       return ret;
     }
@@ -138,10 +137,10 @@ namespace ngl{
             running=false;
           }
           else if(event.type==SDL_VIDEORESIZE){
-            set_window_geometry(event.resize.w, event.resize.h, 32, 
+            set_window_geometry(event.resize.w, event.resize.h, 32,
                                 Window::Normal);
           }
-          
+
           if( (errCode=g_context.app->on_event(&event)) != ngl::EOk ){
             if( errCode > 0 )
               errCode = ngl::EOk;
@@ -150,7 +149,7 @@ namespace ngl{
         }
 
         g_context.frameTimer.lap();
-        if( errCode                           == EOk && 
+        if( errCode                           == EOk &&
             (errCode = g_context.app->tick()) != ngl::EOk )
           running=false;
 
@@ -167,7 +166,7 @@ namespace ngl{
                   ( type == Window::Fullscreen ? SDL_FULLSCREEN : 0);
 
       if( !SDL_SetVideoMode(width, height, bpp, flags) ){
-        novo::logerr("SDL_SetVideoMode failed\n");
+        //novo::logerr("SDL_SetVideoMode failed\n");
         return 0;
       }
       glMatrixMode(GL_PROJECTION);
@@ -177,7 +176,7 @@ namespace ngl{
       glViewport(0, 0, width, height);
 
       g_context.app->on_resize(width, height);
-      
+
       return EOk;
     }
   }
