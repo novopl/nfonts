@@ -22,8 +22,8 @@ namespace ngl{
 //======================================================================
 class AbstractRenderer{
   AbstractRenderer(const AbstractRenderer &obj){}
-  AbstractRenderer& operator=(const AbstractRenderer &obj){ 
-    return *this; 
+  AbstractRenderer& operator=(const AbstractRenderer &obj){
+    return *this;
   }
 
   public:
@@ -32,7 +32,7 @@ class AbstractRenderer{
 
     int state_setup();
     int state_cleanup();
-    
+
     void print_info(const Font &font);
     void print_vertex(const Font::Vertex &v);
 
@@ -48,8 +48,8 @@ class AbstractRenderer{
 //======================================================================
   class LegacyRenderer : public AbstractRenderer{
     LegacyRenderer(const LegacyRenderer &obj){}
-    LegacyRenderer& operator=(const LegacyRenderer &obj){ 
-      return *this; 
+    LegacyRenderer& operator=(const LegacyRenderer &obj){
+      return *this;
     }
 
     public:
@@ -84,7 +84,7 @@ class AbstractRenderer{
       Font::Vertex      vb[kNumVerts];
       Triangle16        ib[kNumVerts/2];
   };
-  
+
 //======================================================================
 /** \class VBORenderer
 \brief  Vertex buffer object renderer.
@@ -102,13 +102,13 @@ class AbstractRenderer{
 
     private:
       int extend_buffers(uint32_t vertCount);
-      
+
       uint32_t    m_vb;
       uint32_t    m_ib;
       uint32_t    m_vertCount;
   };
 
-  
+
   namespace Renderer{
     enum RendererType{
       Legacy,

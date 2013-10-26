@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 2.6)
 option(BUILD_TESTS      "Build tests"       ON)
 
 set(nfonts-src    src/nFontTypes.cpp
+                  src/nGLGlyphAtlas.cpp
                   src/nFontFace.cpp
                   src/nFont.cpp
                   src/nFontRenderers.cpp

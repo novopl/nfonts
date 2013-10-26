@@ -59,6 +59,8 @@ namespace ngl{
 */
 //==============================================================================
   class Font{
+      Font(const Font &obj)             = delete;
+      Font& operator=(const Font &obj)  = delete;
     public:
       struct RenderRequest;
       struct Vertex;
@@ -84,8 +86,6 @@ namespace ngl{
       typedef std::vector<Triangle16>   Triangles;
       typedef std::list<CacheEntry>     Cache;
       
-      Font(const Font &obj);
-      Font& operator=(const Font &obj);
 
       CacheEntry* cache(const String &msg);
       CacheEntry* find_cached(const String &msg);

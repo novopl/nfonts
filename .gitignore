@@ -1,2 +1,15 @@
 build
+commit-notes
+*~
+*swp
+*.kdev4
+.*.swp
+data
+_build
+_static
+doxyout
+content
+bin
+Makefile.dep
+.directory
 tags

@@ -55,7 +55,7 @@ namespace ngl{
   Hash_t gen_hash(const String &string, Hash_t initial=0);
   extern Error gl_error_check(const char *msg);
 
-  
+
   namespace TextWrap{
     enum Mode{
       None,     // No wrapping.
@@ -65,11 +65,11 @@ namespace ngl{
   }
   typedef TextWrap::Mode TextWrapMode;
 
-//==============================================================================
-/** \class Color32
-\brief  32bit color.
-*/
-//==============================================================================
+  //============================================================================
+  //{{{ Color32
+  /** 32bit color.
+   */
+  //============================================================================
   struct Color32{
     union{
       struct{
@@ -111,14 +111,14 @@ namespace ngl{
     static const Color32 darkBlue;
     static const Color32 yellow;
     static const Color32 orange;
-  };
+  };//}}}
 
 
-//==============================================================================
-/** \class Vec2
-\brief  2D vector.
-*/
-//==============================================================================
+  //============================================================================
+  //{{{ Vec2
+  /** 2D vector.
+   */
+  //============================================================================
   template<typename T>
   struct Vec2{
     typedef Vec2<T>    This;
@@ -156,23 +156,19 @@ namespace ngl{
   };
   template<typename T>  const Vec2<T> Vec2<T>::null(0, 0);
   //--------------------------------------------------------------------------//
-  //--------------------------------------------------------------------------//
   template<typename T>
   Vec2<T>::Vec2(){
   }
-  //--------------------------------------------------------------------------//
   //--------------------------------------------------------------------------//
   template<typename T>
   Vec2<T>::Vec2(T _x, T _y)
   :x(_x), y(_y){
   }
   //--------------------------------------------------------------------------//
-  //--------------------------------------------------------------------------//
   template<typename T>
   Vec2<T>::Vec2(const This &obj)
   :x(obj.x), y(obj.y){
   }
-  //--------------------------------------------------------------------------//
   //--------------------------------------------------------------------------//
   template<typename T>
   template<typename U>
@@ -180,7 +176,6 @@ namespace ngl{
   :x( static_cast<T>(obj.x) ),
   y( static_cast<T>(obj.y) ){
   }
-  //--------------------------------------------------------------------------//
   //--------------------------------------------------------------------------//
   template<typename T>
   Vec2<T>& Vec2<T>::set(T _x, T _y){
@@ -190,7 +185,6 @@ namespace ngl{
   }
 
   //--------------------------------------------------------------------------//
-  //--------------------------------------------------------------------------//
   template<typename T>
   Vec2<T>& operator+=(Vec2<T> &ls, const Vec2<T> &rs){
     ls.x+=rs.x;
@@ -198,39 +192,34 @@ namespace ngl{
     return ls;
   }
   //--------------------------------------------------------------------------//
-  //--------------------------------------------------------------------------//
   template<typename T>
   Vec2<T> operator+(const Vec2<T> &ls, const Vec2<T> &rs){
     return Vec2<T>(ls.x+rs.x, ls.y+rs.y);
   }
-  //--------------------------------------------------------------------------//
   //--------------------------------------------------------------------------//
   template<typename T>
   Vec2<T> operator+(const Vec2<T> &ls, const T &rs){
     return Vec2<T>(ls.x+rs, ls.y+rs);
   }
   //--------------------------------------------------------------------------//
-  //--------------------------------------------------------------------------//
   template<typename T>
   Vec2<T> operator-(const Vec2<T> &ls, const Vec2<T> &rs){
     return Vec2<T>(ls.x-rs.x, ls.y-rs.y);
   }
   //--------------------------------------------------------------------------//
-  //--------------------------------------------------------------------------//
   template<typename T>
   Vec2<T> operator-(const Vec2<T> &ls, const T &rs){
     return Vec2<T>(ls.x-rs, ls.y-rs);
   }
+  //}}}
 
 
 
-
-
-//==============================================================================
-/** \class Vec3
-\brief  3D vector.
-*/
-//==============================================================================
+  //============================================================================
+  //{{{ Vec3
+  /** 3D vector.
+   */
+  //============================================================================
   template<typename T>
   struct Vec3{
     typedef Vec3<T>    This;
@@ -260,32 +249,24 @@ namespace ngl{
   };
   template<typename T>  const Vec3<T> Vec3<T>::null(0, 0, 0);
   //--------------------------------------------------------------------------//
-  //--------------------------------------------------------------------------//
-  template<typename T>
-  Vec3<T>::Vec3(){
+  template<typename T>  Vec3<T>::Vec3(){ //{{{
   }
-  //--------------------------------------------------------------------------//
-  //--------------------------------------------------------------------------//
-  template<typename T>
-  Vec3<T>::Vec3(T _x, T _y, T _z)
+  //}}}-----------------------------------------------------------------------//
+  template<typename T>  Vec3<T>::Vec3(T _x, T _y, T _z) //{{{
   :x(_x), y(_y), z(_z){
   }
-  //--------------------------------------------------------------------------//
-  //--------------------------------------------------------------------------//
-  template<typename T>
-  Vec3<T>::Vec3(const This &obj)
+  //}}}-----------------------------------------------------------------------//
+  template<typename T>  Vec3<T>::Vec3(const This &obj) //{{{
   :x(obj.x), y(obj.y), z(obj.z){
   }
-  //--------------------------------------------------------------------------//
-  //--------------------------------------------------------------------------//
-  template<typename T>
-  Vec3<T>& Vec3<T>::set(T _x, T _y, T _z){
+  //}}}-----------------------------------------------------------------------//
+  template<typename T>  Vec3<T>& Vec3<T>::set(T _x, T _y, T _z){ //{{{
     x=_x;
     y=_y;
     z=_z;
     return *this;
-  }
-
+  }//}}}
+  //}}}
 
 
 
@@ -302,12 +283,12 @@ namespace ngl{
 
 
 
-  class GlyphAtlas;
-//==============================================================================
-/** \class Glyph
-\brief  Glyph.
-*/
-//==============================================================================
+  class IGlyphAtlas;
+  //============================================================================
+  //{{{ Glyph
+  /** Encapsulation of a single glyph, including metadata.
+  */
+  //============================================================================
   struct Glyph{
     char          code;     // character.
     TexCoords     botLeft;
@@ -315,19 +296,19 @@ namespace ngl{
     Size2         size;
     int2          off;
     float         advance;  // glyph x advance.
-    GlyphAtlas    *owner;
+    IGlyphAtlas   *owner;
 
     bool operator!=(const Glyph &obj) const;
     bool operator==(const Glyph &obj) const;
 
     static const Glyph null;
-  };
-  
-//==============================================================================
-/** \class MemPool
-\brief  Memory pool(freelist).
-*/
-//==============================================================================
+  };//}}}
+
+  //============================================================================
+  //{{{ MemPool
+  /** Memory pool (freelist).
+   */
+  //============================================================================
   class MemPool{
       MemPool(const MemPool &obj);
       MemPool& operator=(const MemPool &obj);
@@ -355,14 +336,33 @@ namespace ngl{
       typedef std::list<Chunk>    FreeList;
 
       FreeList::iterator prev_free(MemAddr_t addr);
-      
+
       byte      *m_data;
       size_t    m_size;
       size_t    m_available;
       FreeList  m_free;
-  };
+  };//}}}
 
-  
+
+  //============================================================================
+  //{{{ IGlyphAtlas
+  /** Interface for custom texture atlas implementation.
+   */
+  //============================================================================
+  class IGlyphAtlas{
+    IGlyphAtlas(const IGlyphAtlas&)             = delete;
+    IGlyphAtlas(const IGlyphAtlas&&)            = delete;
+    IGlyphAtlas& operator=(const IGlyphAtlas&)  = delete;
+    IGlyphAtlas& operator=(const IGlyphAtlas&&) = delete;
+  public:
+    IGlyphAtlas(){}
+    virtual ~IGlyphAtlas(){}
+
+    virtual TextureID texid() const = 0;
+    virtual Error add(Glyph &out, const byte *data, const Size2 &size)=0;
+  };//}}}
+
+
   namespace freetype{
     extern bool init();
     extern void cleanup();

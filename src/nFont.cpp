@@ -18,22 +18,6 @@ Copyright (c) 2010 Mateusz 'novo' Klos.
 
 namespace ngl{
   //--------------------------------------------------------------------------//
-  /// \brief  Copy constructor.
-  ///   \param[in]  obj   Font object to copy from.
-  //--------------------------------------------------------------------------//
-  Font::Font(const Font &obj){
-  }
-  //--------------------------------------------------------------------------//
-  /// \brief  Assign operator
-  ///    \param[in] obj   Font object to assign to this.
-  /// \returns
-  /// Reference to itself.
-  //--------------------------------------------------------------------------//
-  Font &Font::operator=(const Font &obj){
-    return *this;
-  }
-  
-  //--------------------------------------------------------------------------//
   /// \brief  Default constructor.
   //--------------------------------------------------------------------------//
   Font::Font(const String &face, size_t sizeInPt)
@@ -225,8 +209,7 @@ namespace ngl{
       ib[tOff+0].set(i+0, i+1, i+3);
       ib[tOff+1].set(i+3, i+1, i+2);
     }
-    
-    texID=m_face->atlas()->textureID();
+    texID=m_face->atlas()->texid();
   }
   //--------------------------------------------------------------------------//
   //--------------------------------------------------------------------------//

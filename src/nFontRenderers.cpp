@@ -53,14 +53,15 @@ Copyright (c) 2010 Mateusz 'novo' Klos
 // glPrimitiveRestart
 #define GL_PRIMITIVE_RESTART_NV   0x8558
 
-typedef void      (STDCALL * PFNGLGENBUFFERSARBPROC)        (GLsizei n, GLuint *buffers);
-typedef void      (STDCALL * PFNGLDELETEBUFFERSARBPROC)     (GLsizei n, const GLuint *buffers);
-typedef void      (STDCALL * PFNGLBINDBUFFERARBPROC)        (GLenum target, GLuint buffer);
-typedef void      (STDCALL * PFNGLBUFFERDATAARBPROC)        (GLenum target, GLint size, const GLvoid *data, GLenum usage);
-typedef void*     (STDCALL * PFNGLMAPBUFFERARBPROC)         (GLenum target, GLenum access);
-typedef GLboolean (STDCALL * PFNGLUNMAPBUFFERARBPROC)       (GLenum target);
-typedef GLboolean (STDCALL * PFNGLISBUFFERARBPROC)          (GLuint buffer);
 
+//typedef void      (STDCALL * PFNGLGENBUFFERSARBPROC)        (GLsizei n, GLuint *buffers);
+//typedef void      (STDCALL * PFNGLDELETEBUFFERSARBPROC)     (GLsizei n, const GLuint *buffers);
+//typedef void      (STDCALL * PFNGLBINDBUFFERARBPROC)        (GLenum target, GLuint buffer);
+//typedef void      (STDCALL * PFNGLBUFFERDATAARBPROC)        (GLenum target, GLint size, const GLvoid *data, GLenum usage);
+//typedef void*     (STDCALL * PFNGLMAPBUFFERARBPROC)         (GLenum target, GLenum access);
+//typedef GLboolean (STDCALL * PFNGLUNMAPBUFFERARBPROC)       (GLenum target);
+//typedef GLboolean (STDCALL * PFNGLISBUFFERARBPROC)          (GLuint buffer);
+//
 PFNGLGENBUFFERSARBPROC      glGenBuffers            =0;
 PFNGLISBUFFERARBPROC        glIsBuffer              =0;
 PFNGLDELETEBUFFERSARBPROC   glDeleteBuffers         =0;
